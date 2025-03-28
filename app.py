@@ -10,7 +10,8 @@ from utils import (
     visualize_subcategory_expenses,
     calculate_total_spent,
     generate_expense_report,
-    CATEGORIES
+    CATEGORIES,
+    MAIN_FILE
 )
 
 st.set_page_config(
@@ -29,7 +30,7 @@ st.title("💰 Personal Expense Tracker")
 st.sidebar.title("Navigation")
 page = st.sidebar.radio(
     "Choose a page:",
-    ["Add Expense", "View Expenses", "Visualize Expenses", "Reports"]
+    ["Add Expense", "View Expenses", "Visualize Expenses", "Reports", "Backup & Restore"]
 )
 
 # Add Expense Page
@@ -132,7 +133,7 @@ elif page == "Visualize Expenses":
             st.warning("No data available for visualization.")
 
 # Reports Page
-else:  # Reports
+elif page == "Reports":
     st.header("Expense Reports")
     
     # Calculate total spent
@@ -165,6 +166,61 @@ else:  # Reports
         )
     else:
         st.warning("No data available for the report.")
+
+# Backup & Restore Page
+else:  # Backup & Restore
+    st.header("Backup & Restore Data")
+    
+    expenses_df = get_expenses()
+    
+    # Backup Section
+    st.subheader("📤 Backup Your Data")
+    st.markdown("""
+    Download your expense data as a CSV file for safekeeping. 
+    This is especially important when using Streamlit Cloud, as data may not persist between sessions.
+    """)
+    
+    if not expenses_df.empty:
+        csv = expenses_df.to_csv(index=False)
+        st.download_button(
+            label="Download Complete Expense Data",
+            data=csv,
+            file_name="expense_tracker_backup.csv",
+            mime="text/csv",
+            help="Download a complete backup of all your expense data"
+        )
+    else:
+        st.warning("No expense data available to backup.")
+    
+    # Restore Section
+    st.subheader("📥 Restore Data")
+    st.markdown("""
+    Upload a previously saved expense CSV file to restore your data.
+    This will **replace** your current data with the uploaded data.
+    """)
+    
+    uploaded_file = st.file_uploader("Upload backup CSV file", type=["csv"])
+    
+    if uploaded_file is not None:
+        # Confirmation
+        st.warning("⚠️ This will replace your current expense data. Make sure to backup first if needed.")
+        
+        if st.button("Confirm Restore"):
+            try:
+                # Read uploaded file
+                restore_df = pd.read_csv(uploaded_file)
+                
+                # Validate file format
+                required_columns = ["Date", "Description", "Category", "Subcategory", "Amount"]
+                if all(col in restore_df.columns for col in required_columns):
+                    # Save to CSV (overwrites existing file)
+                    restore_df.to_csv(MAIN_FILE, index=False)
+                    st.success("✅ Data successfully restored!")
+                    st.info("Refresh the page to see your restored data.")
+                else:
+                    st.error("❌ Invalid file format. The CSV must contain Date, Description, Category, Subcategory, and Amount columns.")
+            except Exception as e:
+                st.error(f"❌ Error restoring data: {e}")
 
 # Footer
 st.sidebar.markdown("---")
