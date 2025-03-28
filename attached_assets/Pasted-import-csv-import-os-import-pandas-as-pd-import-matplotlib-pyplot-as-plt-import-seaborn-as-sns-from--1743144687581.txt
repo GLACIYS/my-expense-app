@@ -1,0 +1,151 @@
+import csv
+import os
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from datetime import datetime
+
+
+MAIN_FILE = "expenses.csv"
+
+CATEGORIES = {
+    "Food": ["Restaurants", "Snacks", "Cafes"],
+    "Transport": ["Fuel", "Public Transport", "Cabs"],
+    "Shopping": ["Accessories", "Clothes", "Electronics"],
+    "Bills": ["Household", "Internet", "Product"],
+    "Entertainment": ["Subscriptions", "Games", "Movies"],
+    "Others": ["Gifts", "Donations", "Miscellaneous"],
+
+}
+
+if not os.path.exists(MAIN_FILE):
+    with open(MAIN_FILE, "w", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow(["Date", "Description", "Category", "Subcategory", "Amount"])
+
+
+def add_expense():
+    description = input("Enter expense description: ")
+
+    print("\nChoose a category:")
+    category_list = list(CATEGORIES.keys())
+    for i, c in enumerate(category_list, 1):
+        print(f"{i}) {c}")
+
+    category_index = int(input("Select (1-6): ")) -1
+    category = category_list[category_index]
+
+    print("\nChoose a subcategory:")
+    subcategory_list = list(CATEGORIES[category])
+    for i, s in enumerate(subcategory_list, 1):
+        print(f"{i}) {s}")
+
+    subcategory_index = int(input("Select a subcategory: ")) -1
+    subcategory = subcategory_list[subcategory_index]
+
+    amount = float(input("Enter amount: "))
+    date = datetime.now().strftime("%d/%m/%Y")
+
+    with open(MAIN_FILE, "a", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow([date, description, category, subcategory, amount])
+
+    print("\nDone!")
+
+def show_expenses():
+    df = pd.read_csv(MAIN_FILE, names=["Date", "Description", "Category", "Subcategory", "Amount"], skiprows=1)
+    if df.empty:
+        print("❌ No expenses found!")
+        return
+
+    print("\n📊 Your Expenses:")
+    print(df.to_string(index=False))
+
+
+
+def visualize_expenses():
+    df = pd.read_csv(MAIN_FILE)
+
+    if df.empty:
+        print("❌ No data to visualize!")
+        return
+
+    df = df.rename(columns=lambda x: x.strip())  # Remove extra spaces in column names
+    print("\n🔍 Checking Columns in DataFrame:", df.columns)  # Debugging Step
+
+    plt.figure(figsize=(10, 5))
+    sns.barplot(x="Category", y="Amount", data=df, estimator=sum, errorbar=None)  # Fix ci=None -> errorbar=None
+    plt.title("💸 Expense Breakdown by Category")
+    plt.xticks(rotation=45)
+    plt.show()
+
+def visualize_subcategory():
+    df = pd.read_csv(MAIN_FILE)
+
+    if df.empty:
+        print("❌ No data to visualize!")
+        return
+
+    plt.figure(figsize=(10, 5))
+    sns.barplot(x="Subcategory", y="Amount", data=df, estimator=sum, ci=None)
+    plt.title("💸 Expense Breakdown by Subcategory")
+    plt.xticks(rotation=45)
+    plt.show()
+
+def total_spent():
+    df = pd.read_csv(MAIN_FILE)
+
+    if df.empty:
+        print("❌ No expenses recorded!")
+        return
+
+    total = df["Amount"].sum()
+    print(f"\n💰 Total spent: ₹{total:.2f}")
+
+
+def generate_report():
+    df = pd.read_csv(MAIN_FILE)
+
+    if df.empty:
+        print("❌ No expenses to report!")
+        return
+
+    print("\n📊 Expense Report:")
+    monthly_spent = df.groupby(df["Date"].str[:7])["Amount"].sum()
+    print(monthly_spent.to_string())
+
+
+def main():
+    while True:
+        print("\n💰 Personal Expense Manager")
+        print("1️⃣ Add Expense")
+        print("2️⃣ View Expenses")
+        print("3️⃣ Visualize Spending by Category")
+        print("4️⃣ Visualize Spending by Subcategory")
+        print("5️⃣ Total Spent")
+        print("6️⃣ Generate Report")
+        print("7️⃣ Exit")
+
+        choice = input("Enter your choice: ")
+
+        if choice == "1":
+            add_expense()
+        elif choice == "2":
+            show_expenses()
+        elif choice == "3":
+            visualize_expenses()
+        elif choice == "4":
+            visualize_subcategory()
+        elif choice == "5":
+            total_spent()
+        elif choice == "6":
+            generate_report()
+        elif choice == "7":
+            print("✅ Exiting. Have a great day!")
+            break
+        else:
+            print("❌ Invalid choice. Try again!")
+
+
+if __name__ == "__main__":
+    main()
