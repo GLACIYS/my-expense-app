@@ -26,9 +26,23 @@ This application is configured for easy deployment to Streamlit Cloud. Follow th
 2. **Sign in with GitHub**: Connect your GitHub account
 3. **Create a New App**:
    - Select the 'my-expense-app' repository
-   - Set the main file path to: `app.py`
-   - Rename `streamlit_requirements.txt` to `requirements.txt` or enter the requirements manually
+   - Set the main file path to: `deployment_app.py` (special file for Streamlit Cloud)
+   - For requirements, use any of these options:
+     - Enter these manually: `streamlit>=1.22.0,pandas>=1.5.3,matplotlib>=3.7.1,seaborn>=0.12.2`
+     - Or use the existing `streamlit_requirements.txt` file
 4. **Deploy**: Click the deploy button
+
+### Troubleshooting Deployment
+
+If you encounter a `connection refused` error during deployment:
+- Verify you're using `deployment_app.py` as the main file
+- Check that your `.streamlit/config.toml` file doesn't specify a custom port
+
+### Port Configuration
+
+- **Locally**: This application runs on port 5000 on Replit
+- **Streamlit Cloud**: The application must use the default port (8501)
+- The `deployment_app.py` file is configured to work correctly on Streamlit Cloud
 
 ### Data Persistence in Cloud
 
